@@ -3909,7 +3909,7 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         r"""
         Computes the k-th factorial `n!^{(k)}` of self. For k=1
         this is the standard factorial, and for k greater than one it is
-        the product of every k-th terms down from self to k. The recursive
+        the product of every k-th terms down from self to one. The recursive
         definition is used to extend this function to the negative
         integers.
 
@@ -3917,8 +3917,8 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
 
             sage: 5.multifactorial(1)
             120
-            sage: 5.multifactorial(2)
-            15
+            sage: 5.multifactorial(3)
+            10
             sage: 23.multifactorial(2)
             316234143225
             sage: prod([1..23, step=2])
@@ -3961,41 +3961,13 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
         # compute the actual product, optimizing the number of large
         # multiplications
         cdef int i,j
-
-        # we need (at most) log_2(#factors) concurrent sub-products
-        cdef int prod_count = <int>ceil_c(log_c(n/k+1)/log_c(2))
-        cdef mpz_t* sub_prods = <mpz_t*>check_allocarray(prod_count, sizeof(mpz_t))
-        for i from 0 <= i < prod_count:
-            mpz_init(sub_prods[i])
-
-        sig_on()
-
-        cdef residue = n % k
-        cdef int tip = 0
-        for i from 1 <= i <= n//k:
-            mpz_set_ui(sub_prods[tip], k*i + residue)
-            # for the i-th terms we use the bits of i to calculate how many
-            # times we need to multiply "up" the stack of sub-products
-            for j from 0 <= j < 32:
-                if i & (1 << j):
-                    break
-                tip -= 1
-                mpz_mul(sub_prods[tip], sub_prods[tip], sub_prods[tip+1])
-            tip += 1
-        cdef int last = tip-1
-        for tip from last > tip >= 0:
-            mpz_mul(sub_prods[tip], sub_prods[tip], sub_prods[tip+1])
-
-        sig_off()
-
-        cdef Integer z = PY_NEW(Integer)
-        mpz_swap(z.value, sub_prods[0])
-
-        for i from 0 <= i < prod_count:
-            mpz_clear(sub_prods[i])
-        sage_free(sub_prods)
-
+        cdef z=n
+        for i from 1 <= i <=n//k:
+          z=z*(n-(i*k))
+          
         return z
+        
+        
 
     def gamma(self):
         r"""
