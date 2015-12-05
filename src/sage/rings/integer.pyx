@@ -3919,6 +3919,8 @@ cdef class Integer(sage.structure.element.EuclideanDomainElement):
             120
             sage: 5.multifactorial(2)
             15
+            sage: 5.multifactorial(3)
+            10
             sage: 23.multifactorial(2)
             316234143225
             sage: prod([1..23, step=2])
